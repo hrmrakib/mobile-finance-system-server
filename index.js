@@ -54,6 +54,7 @@ async function run() {
         pin: hashedPin,
         mobileNumber,
         email,
+        rule: "user",
         status: "pending",
         balance: 0,
       };
