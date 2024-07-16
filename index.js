@@ -14,7 +14,7 @@ app.use(
   })
 );
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.dmwxvyo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -60,6 +60,43 @@ async function run() {
       };
 
       const result = await userCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+    // get all pending users
+    app.get("/pending-users", async (req, res) => {
+      const query = { status: "pending" };
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // login a user
+    app.get("/login", async (req, res) => {
+      const { pin, identifier } = req.body;
+
+      const user = await userCollection.findOne({
+        $or: [{ email: identifier }, { mobileNumber: identifier }],
+      });
+
+      if (!user) {
+        console.log("invalid");
+        return res.send({ message: "Invalid credientials" });
+      }
+    });
+
+    // pending user to a user
+    app.patch("/make-user/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const makeUser = {
+        $set: {
+          status: "approved",
+          balance: 40,
+        },
+      };
+
+      const result = await userCollection.updateOne(filter, makeUser);
       res.send(result);
     });
 
